@@ -1,0 +1,64 @@
+<simzero>
+<!-- Which machine are participating in the exercise -->
+<players>
+  <player ip="192.168.1.10"/>
+  <player ip="192.168.1.20"/>
+  <player ip="192.168.1.30"/>
+  <player ip="192.168.1.40"/>
+  <player ip="192.168.1.50"/>
+</players>
+<!-- These are machines that will be generating requests, but do not have any players on them -->
+<decoys>
+  <decoy ip="192.168.1.11"/>
+  <decoy ip="192.168.1.21"/>
+  <decoy ip="192.168.1.31"/>
+</decoys>
+<!-- These are the services that will be subject to simulated attacks -->
+<services>
+  <service port='80' proto='tcp' server_start='fortune-server.pl' client_start='auto-fortune-tester.pl'/>
+  <service port='22' proto='tcp' server_start='fortune-server.pl' client_start='auto-fortune-tester.pl'/>
+  <service port='2000' proto='tcp' server_start='fortune-server.pl' client_start='auto-fortune-tester.pl'/>
+  <service port='2001' proto='tcp' server_start='fortune-server.pl' client_start='auto-fortune-tester.pl'/>
+  <service port='2002' proto='tcp' server_start='fortune-server.pl' client_start='auto-fortune-tester.pl'/>
+  <service port='2003' proto='tcp' server_start='fortune-server.pl' client_start='auto-fortune-tester.pl'/>
+  <service port='2004' proto='tcp' server_start='fortune-server.pl' client_start='auto-fortune-tester.pl'/>
+  <service port='2005' proto='tcp' server_start='fortune-server.pl' client_start='auto-fortune-tester.pl'/>
+  <service port='2006' proto='tcp' server_start='fortune-server.pl' client_start='auto-fortune-tester.pl'/>
+  <service port='2007' proto='tcp' server_start='fortune-server.pl' client_start='auto-fortune-tester.pl'/>
+  <service port='3030' proto='tcp' server_start='fortune-server.pl' client_start='auto-fortune-tester.pl'/>
+</services>
+<!-- This is a description of the types of exploits used in this contest -->
+<!--     type is what the exploit does
+         level describes what access/severity the exploit has
+         num is how many different ones there are in the contest
+         install is how many of those to install on each machine
+         overlap_reveal is how many exploits that are installed on their box the team should be made aware of
+         nonoverlap_reveal is how many exploits that are not installed on their box the team should be aware of
+-->
+<exploits>
+  <exploit type='exfiltrate' level='user' num='20' install='12' rounds='3'>
+    <round num='1' overlap_reveal='1' nonoverlap_reveal='2'/>
+    <round num='2' overlap_reveal='0' nonoverlap_reveal='1'/>
+    <round num='3' overlap_reveal='1' nonoverlap_reveal='0'/>
+  </exploit>
+  <exploit type='exfiltrate' level='root' num='12' install='4' rounds='3'>
+    <round num='1' overlap_reveal='0' nonoverlap_reveal='1'/>
+    <round num='2' overlap_reveal='0' nonoverlap_reveal='1'/>
+    <round num='3' overlap_reveal='0' nonoverlap_reveal='1'/>
+  </exploit>
+  <exploit type='remoteexec' level='user' num='16' install='0' rounds='3'>
+    <round num='1' overlap_reveal='0' nonoverlap_reveal='0'/>
+    <round num='2' overlap_reveal='0' nonoverlap_reveal='0'/>
+    <round num='3' overlap_reveal='0' nonoverlap_reveal='0'/>
+  </exploit>
+</exploits>
+<!-- These are files that the attackers can get at -->
+<assets>
+  <asset type="file" size="1" location="/tmp" level="user" number="20" />
+  <asset type="file" size="100" location="/tmp" level="user" number="10" />
+  <asset type="file" size="10000" location="/tmp" level="user" number="5" />
+  <asset type="file" size="1" location="/tmp" level="root" number="20" />
+  <asset type="file" size="100" location="/tmp" level="root" number="10" />
+  <asset type="file" size="10000" location="/tmp" level="root" number="5" />
+</assets>
+</simzero>
