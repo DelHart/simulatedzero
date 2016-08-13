@@ -44,7 +44,13 @@ unlink $SOCK_PATH;
 						  Proto => $proto);
 		
 		while (<$fh>) {
-		    $sock->print ($_);
+		    if (!defined $sock) {
+			print "socket undefined\n";
+			last;
+		    }
+		    else {
+			$sock->print ($_);
+		    }
 		}
 
 		undef $fh;

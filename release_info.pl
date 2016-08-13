@@ -37,7 +37,7 @@ foreach my $p (@players) {
     my $ip = $p->{'ip'};
     
     system '/bin/mkdir', $ip unless (-d $ip);
-    system '/usr/bin/sshfs', 'root@' . $ip . ':/', $ip . '/';
+   # system '/usr/bin/sshfs', 'root@' . $ip . ':/', $ip . '/';
 
 
     die "could not access directory for $ip" unless (-d "$ip/tmp");

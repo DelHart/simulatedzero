@@ -26,17 +26,20 @@ our $SEND_CONN;
 #    verdict
 #    action
 
-push @UDP_ACTIONS, { 'pattern' => unpack ('H*', 'SIMZERO:PRINT:'),
+push @UDP_ACTIONS, { 'unpacked' => unpack ('H*', 'SIMZERO:PRINT:'),
+		     'pattern'  => 'SIMZERO:PRINT',
 		     'verdict' => $nfqueue::NF_DROP,
 		     'action'  => 'print',
 };
 
-push @UDP_ACTIONS, { 'pattern' => unpack ('H*', 'SIMZERO:ADD:'),
+push @UDP_ACTIONS, { 'unpacked' => unpack ('H*', 'SIMZERO:ADD:'),
+		     'pattern'  => 'SIMZERO:ADD',
 		     'verdict' => $nfqueue::NF_DROP,
 		     'action'  => 'add',
 };
 
-push @UDP_ACTIONS, { 'pattern' => unpack ('H*', 'SIMZERO:SEND:'),
+push @UDP_ACTIONS, { 'unpacked' => unpack ('H*', 'SIMZERO:SEND:'),
+		     'pattern'  => 'SIMZERO:SEND',
 		     'verdict' => $nfqueue::NF_DROP,
 		     'action'  => 'send',
 		     'options' => { 'safety' => 1 },
@@ -118,7 +121,18 @@ sub process_tcp {
     
     if ($tcp_obj->{flags} & NetPacket::TCP::PSH &&
 	length($tcp_obj->{data})) {
-	print $tcp_obj->{data};
+	my $data = $tcp_obj->{'data'};
+	#print $tcp_obj->{data};
+	foreach my $ua (@TCP_ACTIONS) {
+	    my $pattern = $ua->{'pattern'};
+	    print "-----$pattern--- \n";
+	    if ($data =~ m/\Q$pattern/) {
+		
+		&{$ACTIONS->{$ua->{'action'}}} ($tcp_obj, $data, $ua);
+		
+		return $ua->{'verdict'};
+	    }
+	}
     }
     
     return $nfqueue::NF_ACCEPT;
@@ -130,7 +144,7 @@ sub process_udp {
 
     my $udp_obj = NetPacket::UDP->decode ($ip_obj->{data});
     my $data = $udp_obj->{data};
-    my $hex = unpack ("H*", $data);
+    my $hex = $data; # unpack ("H*", $data);
 
     print "hex: $hex\n";
 
@@ -168,14 +182,16 @@ sub add_handler {
     my $udp = shift;
     my $hex = shift;
 
-    my @args = split ('3a', $hex);
+    my @args = split (':', $hex);
 
-    my $action = { 'pattern' => pack ('H*', $args[2]),
-		   'verdict' => pack ('H*', $args[4]),
-		   'action'  => pack ('H*', $args[3]),
+    # the packing is because the flag is specified using ascii
+    my $action = { 'unpacked' => $args[2],
+		   'pattern' => pack ('H*', $args[2]),
+		   'verdict' => $args[4], #pack ('H*', $args[4]),
+		   'action'  => $args[3], #pack ('H*', $args[3]),
     };
 
-    if ($args[5] eq '30') {
+    if ($args[5] eq '0') {
 	push @UDP_ACTIONS, $action;
     }
     else {
@@ -188,14 +204,15 @@ sub add_handler {
 
 sub send_handler {
     my $udp = shift;
-    my $hex = shift;
+    my $arg = shift;
     my $ua  = shift;
 
 # connection type, ip address, port number, options, file
-    my $arg = pack ('H*', $hex);
+    #my $arg = pack ('H*', $hex);
     # strip off the header pattern
-    $arg =~ s/$ua->{'pattern'}//;
+    $arg =~ s/\Q$ua->{'pattern'}://;
     chomp $arg;
+    print "arg is $arg\n";
     
     my ($type, $ip, $port, $options, $file) = split (':', $arg, 5);
     my $opts = {};
@@ -203,6 +220,7 @@ sub send_handler {
 	my ($k, $v) = split ('=', $opt);
 	$opts->{$k} = $v;
     }
+    print Dumper $opts;
 
     # if there are builtin options, override the ones passed in
     if (defined $ua->{'options'}) {
